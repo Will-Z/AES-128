@@ -48,7 +48,7 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 // Key length in bytes [128 bit]
 #define KEYLEN 16
 // The number of rounds in AES Cipher.
-#define Nr 10
+#define Nr 4
 
 // jcallan@github points out that declaring Multiply as a function 
 // reduces code size considerably with the Keil ARM compiler.
