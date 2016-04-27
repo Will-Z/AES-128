@@ -35,7 +35,10 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
+#include <stdio.h>
+#include <iostream>
 #include "aes.h"
+using namespace std;
 
 
 /*****************************************************************************/
@@ -409,6 +412,14 @@ static void Cipher(void)
     AddRoundKey(Nr);
 }
 
+void pstate(state_t* matrix) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++)
+            printf("%.2x ", (*matrix)[i][j]);
+        printf("\n");
+    }
+}
+
 static void InvCipher(void)
 {
     uint8_t round=0;
@@ -430,8 +441,12 @@ static void InvCipher(void)
     // The last round is given below.
     // The MixColumns function is not here in the last round.
     InvShiftRows();
+    //printf("after AK SB:  ");
+    printf("0x%.2x, ", (*state)[0][0]);
     InvSubBytes();
     AddRoundKey(0);
+
+
 }
 
 static void BlockCopy(uint8_t* output, uint8_t* input)

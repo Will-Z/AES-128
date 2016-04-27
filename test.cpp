@@ -11,25 +11,44 @@
 
 static void phex(uint8_t* str);
 static void test_encrypt_ecb(void);
-static void test_decrypt_ecb(void);
+static void test_decrypt_ecb(uint8_t Aset[][16]);
 static void test_encrypt_ecb_verbose(void);
 static void test_encrypt_cbc(void);
 static void test_decrypt_cbc(void);
+static void create_Aset(int num);
 
-
+uint8_t Aset[256][16];
 
 int main(void)
 {
     //test_encrypt_cbc();
     //test_decrypt_cbc();
 
-    test_encrypt_ecb();
-    test_decrypt_ecb();
+    //test_encrypt_ecb();
+    //test_decrypt_ecb();
 
+
+    for (int i = 0; i < 256; i++) {
+        create_Aset(i);
+        printf("%d : ", i);
+        test_decrypt_ecb(Aset);
+        printf("\n");
+    }
 
     //test_encrypt_ecb_verbose();
 
     return 0;
+}
+
+static void create_Aset(int num) {
+    memset(Aset[0], 0, sizeof(Aset[0]));
+    Aset[0][1] = (uint8_t) num;
+    for (int i = 1; i < 256; i++) {
+        memset(Aset[i], 0, sizeof(Aset[i]));
+        Aset[i][0] = Aset[i - 1] [0] + 1;
+        Aset[i][1] = (uint8_t) num;
+    }
+
 }
 
 
@@ -107,14 +126,19 @@ static void test_encrypt_ecb(void)
 }
 
 
-static void test_decrypt_ecb(void)
+static void test_decrypt_ecb(uint8_t Aset[][16])
 {
     uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-    uint8_t in[]  = {0x7e, 0x68, 0xd3, 0x37, 0x92, 0xab, 0x0d, 0xa1, 0x76, 0x83, 0xeb, 0x15, 0x72, 0x35, 0x35, 0xda};
+    uint8_t in[16];
     uint8_t out[] = {0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a};
     uint8_t buffer[16];
 
-    AES128_ECB_decrypt(in, key, buffer);
+    for(int i = 0; i < 256; i++) {
+        AES128_ECB_decrypt(Aset[i], key, buffer);
+    }
+
+    /*
+    AES128_ECB_decrypt(cipher, key, buffer);
 
     printf("ECB decrypt: ");
     printf("cipher_text:\n");
@@ -124,17 +148,6 @@ static void test_decrypt_ecb(void)
     phex(buffer);
     printf("--------------------------------------------------------------------------------\n");
 
-    /*
-
-
-    if(0 == strncmp((char*) out, (char*) buffer, 16))
-    {
-        printf("SUCCESS!\n");
-    }
-    else
-    {
-        printf("FAILURE!\n");
-    }
     */
 }
 
