@@ -442,7 +442,11 @@ static void InvCipher(void)
     // The MixColumns function is not here in the last round.
     InvShiftRows();
     //printf("after AK SB:  ");
-    printf("0x%.2x, ", (*state)[0][0]);
+    FILE *fout;
+    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "a");
+    fprintf(fout, "%d ", (*state)[0][0]);
+    fclose(fout);
+
     InvSubBytes();
     AddRoundKey(0);
 

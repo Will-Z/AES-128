@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 
 // Enable both ECB and CBC mode. Note this can be done before including aes.h or at compile-time.
 // E.g. with GCC by using the -D flag: gcc -c aes.c -DCBC=0 -DECB=1
@@ -16,8 +17,11 @@ static void test_encrypt_ecb_verbose(void);
 static void test_encrypt_cbc(void);
 static void test_decrypt_cbc(void);
 static void create_Aset(int num);
+static void create_equation_set();
 
 uint8_t Aset[256][16];
+int SS[256];
+bool Eq[2048][2049];
 
 int main(void)
 {
@@ -27,18 +31,107 @@ int main(void)
     //test_encrypt_ecb();
     //test_decrypt_ecb();
 
-
     for (int i = 0; i < 256; i++) {
-        create_Aset(i);
-        printf("%d : ", i);
-        test_decrypt_ecb(Aset);
-        printf("\n");
-    }
+        FILE *fout;
 
-    //test_encrypt_ecb_verbose();
+        create_Aset(i);      //生成A-set
+        //printf("%d : ", i);
+        test_decrypt_ecb(Aset);
+        fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "a");
+        fprintf(fout, "\n");
+        fclose(fout);
+    }  //256*256 pi    "pi.txt"
+
+    create_equation_set();
+  
 
     return 0;
 }
+
+static void create_equation_set() {
+    FILE *fin;
+    int num;
+    fin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "r");
+    for (int i = 0; i < 256; i++)
+        for (int j = 0; j < 256; j++) {
+            fscanf(fin, "%d", &num);
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    Eq[i * 8 + k][num * 8 + k] = 1;
+                else
+                    Eq[i * 8 + k][num * 8 + k] = 0;
+            }
+        }
+    for (int i = 0; i < 2048; i++)
+        Eq[i][2049] = 0;
+    fclose(fin);
+
+    int n = 2048, q0 = 0, q1 = 0, p = 0, x, temp;
+    bool res[2048];
+
+    memset(res, 0, sizeof(bool) * 2048);
+
+    for (int i = 0; i < n; i++) {   // i枚举n个未知数
+        x = -1;
+        for (int j = p; j < n; j++)
+            if (Eq[j][i]) {
+                x = j;
+                break;
+            }
+        if (x >= 0) {
+            if (x != p) {
+                for (int k = i; k <= n; k++) {   //两行交换
+                    temp = Eq[x][k];
+                    Eq[x][k] = Eq[p][k];
+                    Eq[p][k] = temp;
+                }
+            }
+            for (int j = p + 1; j < n; j++)
+                if (Eq[j][i])
+                    for (int k = i; k <= n; k++)
+                        Eq[j][k] ^= Eq[p][k];
+            p++;
+        } else {                    //遇到自由元
+            res[i] = 1;             //定为1
+            for (int j = 0; j < p; j++)   //找到前面xi系数为1的方程 全部带入xi值XOR掉
+                if (Eq[j][i]) {
+                    Eq[j][i] = 0;
+                    Eq[j][n] ^= 1;
+                }
+        }
+    }
+    p--;
+    for (int i = n - 1; i >= 0; i--) {
+        if (!res[i]) {
+            res[i] = Eq[p][n];
+            for (int j = 0; j < p; j++)
+                if (Eq[j][i]) {
+                    Eq[j][i] ^= Eq[p][i];
+                    Eq[j][n] ^= Eq[p][n];
+                }
+            p--;
+        }
+    }
+
+    /*
+    FILE *fout;
+    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/res.txt", "w");
+    for (int i = 0; i <2048; i++)
+        fprintf(fout, "x%d = %d\n", i, res[i]);
+    fclose(fout);
+    */
+
+    int point = 0;
+    for (int i = 0; i < 256; i++) {
+        int num = 0;
+        for (int j = 0; j < 8; j++)
+            num += res[i * 8 + j] * pow(2, 7 - j);
+        SS[i] = num;
+    }
+
+
+}
+
 
 static void create_Aset(int num) {
     memset(Aset[0], 0, sizeof(Aset[0]));
