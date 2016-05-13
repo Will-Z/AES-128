@@ -1,0 +1,13 @@
+//
+// Created by Will on 5/12/16.
+//
+
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+int main() {
+    uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    for (int i = 0; i < 16; i++)
+        printf("%d:  %d\n", i, key[i] ^ key[0]);
+}

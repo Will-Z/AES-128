@@ -85,6 +85,9 @@ int main() {
                 else
                     d[j * 8 + 7 - k] = 0;
         }
+        for (int j = 0; j < 32; j++)
+            printf("%d ",d[j]);
+        printf("\n");
         calc();
     }
 

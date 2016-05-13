@@ -3,5 +3,5 @@ project(prac)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES    R.cpp)
+set(SOURCE_FILES      simple_calc.cpp)
 add_executable(prac ${SOURCE_FILES})

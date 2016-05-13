@@ -21,7 +21,6 @@ static void calc_SS();
 static void calc_kk();
 static int affine(int num);
 static void calc_DD();
-static void calc_AM();
 static void calc_M32();         //计算 32*32的 M矩阵
 static void read_M32();
 static void calc_AM();          //计算 A逆
@@ -57,8 +56,6 @@ static const uint8_t sbox[256] =   {
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
 uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 
-
-
 int main(void)
 {
     //test_encrypt_cbc();
@@ -69,7 +66,7 @@ int main(void)
 
 
 
-/*   //测试 affine()
+   //测试 affine()
     FILE *Ain;
     Ain = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/A.txt", "r");
     for (int i = 0; i < 8; i++)
@@ -78,24 +75,55 @@ int main(void)
 
     fclose(Ain);
 
+
+
+
+
+/*//
+    FILE *Aaffine_table;
+    Aaffine_table = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/Aaffine_table.txt", "w");
+    for (int i = 0; i < 256; i++)
+        fprintf(Aaffine_table, "%d:   %d\n",i, affine(i));
+    fclose(Aaffine_table);
 */
+
+
 
     // 生成SS
-
-
-//    printf("!!!!!   %.2x\n", affine(255));
-
     for (int i = 0; i < 256; i++)
-        //SS[i] = affine(key[0] ^ sbox[i]);
-        SS[i] = sbox[i];  //  先假设  S' 等于 S盒
+        SS[i] = affine(sbox[i ^ key[0]]);
+        //SS[i] = sbox[i];  //  先假设  S' 等于 S盒
 
-
-
-
-/*
+    //  输出S'  SS[]
+    FILE *SSout;
+    SSout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/SS_table.txt", "w");
     for (int i = 0; i < 256; i++)
-        printf("%d:  %d\n",i, SS[i]);
-*/
+        fprintf(SSout, "%d:  %d\n", i, SS[i]);
+    fclose(SSout);
+
+
+    FILE *AMin;
+    AMin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/AM.txt", "r");
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            fscanf(AMin, "%d", &A[i][j]);
+
+    fclose(AMin);
+
+
+
+
+    int SSS[256];
+    for (int i = 0; i < 256; i++)
+        SSS[i] = affine(SS[i ^ key[0]]);
+
+    FILE *SSSout;
+    SSSout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/SSS_table.txt", "w");
+    for (int i = 0; i < 256; i++)
+        fprintf(SSout, "%d:   %d   %d  %d\n", i,sbox[i], SS[i], SSS[i]);
+    fclose(SSSout);
+
+
 
 
 /*  //将 0-255 对应的affine 打印到 affine.txt
@@ -106,8 +134,8 @@ int main(void)
     fclose(Aout);
 */
 
-
 /*
+
     for (int i = 0; i < 256; i++) {
         FILE *fout;
 
@@ -118,31 +146,16 @@ int main(void)
         fprintf(fout, "\n");
         fclose(fout);
     }  //256*256  明文第一个字节    "pi.txt"
+
+    calc_SS();      //计算S'    SS[]
+
 */
-//    calc_SS();      //计算S'    SS[]
-
-
-
-/*   //打印 S' SS[]
-    FILE *fout;
-    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/SS.txt", "w");
-    for(int i = 0; i < 256; i++) {
-        fprintf(fout, "%d:  ", i);
-            fprintf(fout, "%d\n ",SS[i]);
-    }
-    fclose(fout);
+/*
+    for (int i = 0; i < 256; i++)
+        for (int j = 0; j < 16; j++)
+            plain_text[i][j] = (int)affine(plain_text[i][j]);
 */
 
-    //uint8_t plain[16];
-
-    create_Aset(0);     // 使用第二个位置是 0x00的这个 Aset
-    //AES128_ECB_decrypt(Aset[255], key, plain);
-
-
-    for (int i = 0; i < 256; i++) {    // 用A-set解出明文 存于plain_text[][]中
-
-        AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
-    }
 
 
 /*      //print plain_text
@@ -159,29 +172,71 @@ int main(void)
 */
     //test_encrypt_ecb();
 
-
+/*
     for (int i = 0; i < 16; i++)
-        //kk[i] = 0;
+        //kk[i] = -1;
         kk[i] = key[i];    //先假设  k'等于key
-
+*/
     //calc_kk();
 /*   // 打印kk[]
     for (int i = 0; i < 16; i++)
-        printf("%d ", kk[i]);
+        printf("%d:  %d   %d\n",i, key[i],  kk[i]);
     printf("\n");
 */
 
+/*
+    FILE *AMin;
+    AMin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/AM.txt", "r");
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            fscanf(AMin, "%d", &A[i][j]);
 
+    fclose(AMin);
+*/
+/*
+    FILE *AMaffine_table;
+    AMaffine_table = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/AMaffine_table.txt", "w");
+    for (int i = 0; i < 256; i++)
+        fprintf(AMaffine_table, "%d:   %d\n",i, affine(i));
+    fclose(AMaffine_table);
+*/
+
+/*  //----------------------------------------------------------
+
+
+    create_Aset(0);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+    for (int i = 0; i < 256; i++)
+        AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+    calc_DD();
+    for (int i = 0; i < 256; i++) {
+        for (int j = 0; j < 4; j++) {
+            DD[i][j] = affine(DD[i][j]);
+        }
+    }
+
+    uint8_t matrix[16];
+    uint8_t output[16];
+
+    for (int i = 0; i <256; i++) {
+        for (int j = 0; j < 16; j++)
+            matrix[j] = 0x00;
+        for (int j = 0; j < 4; j++)
+            matrix[j] =(uint8_t) DD[i][j];
+        test_DD(matrix, key, output);
+    }
+//---------------------------------------------------------------
+*/
+
+/*
     calc_AM();
-/*    // 打印AM[]
+    // 打印AM[]
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++)
             printf("%d ", AM[i][j]);
         printf("\n");
     }
+
 */
-
-
 
     return 0;
 }
@@ -192,6 +247,7 @@ static bool judgeR(int x[32]) {
 
         int y[32];                          //将DD 化成32比特的形式存在y[]中
         for (int l = 0; l < 4; l++) {
+           // printf("%d ", DD[i][l]);
             for (int k = 0; k < 8; k++) {
                 if (DD[i][l] & (1 << k))      //低位在前
                     y[7 - k + l * 8] = 1;
@@ -199,6 +255,10 @@ static bool judgeR(int x[32]) {
                     y[7 - k + l * 8] = 0;
             }
         }
+//        for (int j = 0; j < 32; j++)
+//            printf("%d ",y[j]);
+//        printf("\n");
+        //printf("\n");
 //        printf("%d:   ", i);
 //        for (int j = 0; j < 32; j++)
 //            printf("%d ", y[j]);
@@ -220,9 +280,10 @@ static bool judgeR(int x[32]) {
 
 //======================================================================================================================
 static void calc_AM() {
+    int count[256];
+    memset(count, 0, sizeof(int) * 256);
 
-    calc_DD();
-   //将DD打印到DD.txt
+/*   //将DD打印到DD.txt
     FILE *DDout;
     DDout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/DD.txt", "w");
     for (int i = 0; i < 256; i++) {
@@ -232,11 +293,11 @@ static void calc_AM() {
         fprintf(DDout, "\n");
     }
     fclose(DDout);
+*/
 
-
-    AM[0][0] = 1;
-    for (int i = 1; i < 8; i++)    //将 AM[0] 固定为8个1
-        AM[0][i] = 0;
+    for (int i = 0; i < 8; i++)    //将 AM[0] 固定为  1000 0000
+        AM[0][i] = 1;
+//    AM[0][0] = 1;
 
 
 
@@ -250,378 +311,526 @@ static void calc_AM() {
     int x[32];
     int a[8];
 //------------------------------------------------------------------------------- 计算 AM[1] (a1, a0^a1, a0, a0)
-    printf("<%d>----------------------\n", 1);
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[0][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[0][i - 24];
+    //printf("<%d>----------------------\n", 1);
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
 
-    for (int num = 0; num < 256; num++) {              //枚举 2^8
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))                       //低位数在前
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[0][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[0][i - 24];
+        for (int num = 0; num < 256; num++) {              //枚举 2^8
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))                       //低位数在前
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+         for (int k = 0; k < 8; k++)
+                x[k] = a[k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[0][k - 8];
+            if (judgeR(x))
+                count[num]++;
+
         }
-/*        printf("%d:   ", num);
-        for (int k = 0; k < 8; k++)
-            printf("%d ", a[k]);
-        printf("\n");
+    }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[1][7 - j] = 1;
+                else
+                    AM[1][7 - j] = 0;
+        }
+ //    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[1][i]);
+
+//--------------------------------------------------------------------------------计算AM[2] (a2, a1^a2, a1, a1)
+
+    //printf("<%d>----------------------\n", 2);
+    // 先假定 AM[1] 0100 0000
+//    for (int i = 0; i < 8; i++)
+//        AM[1][i] = 0;
+//    AM[1][1] = 1;
+    memset(count, 0, sizeof(int) * 256);
+
+
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[1][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[1][i - 24];
+
+        for (int num = 0; num < 256; num++) {
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+            for (int k = 0; k < 8; k++)
+                x[k] = a[k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[1][k - 8];
+
+            if (judgeR(x))
+                count[num]++;
+
+        }
+    }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[2][7 - j] = 1;
+                else
+                    AM[2][7 - j] = 0;
+        }
+
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ", AM[2][i]);
+
+//-----------------------------------------------------------------------------计算AM[3] (a3, a2^a3, a2, a2)
+    // 先假定 AM[2] 0010 0000
+//    for (int i = 0; i < 8; i++)
+//        AM[2][i] = 0;
+//    AM[2][2] = 1;
+
+    memset(count, 0, sizeof(int) * 256);
+
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[2][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[2][i - 24];
+
+        for (int num = 0; num < 256; num++) {
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+            for (int k = 0; k < 8; k++)
+                x[k] = a[k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[2][k - 8];
+
+            if (judgeR(x))
+                count[num]++;
+        }
+    }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[3][7 - j] = 1;
+                else
+                    AM[3][7 - j] = 0;
+        }
+
+
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[3][i]);
+
+//---------------------------------------------------------------------------计算AM[4] (a0^a4, a0^a3^a4, a3, a3)
+    // 先假定 AM[3] 0001 0000
+//    for (int i = 0; i < 8; i++)
+//        AM[3][i] = 0;
+//    AM[3][3] = 1;
+
+    memset(count, 0, sizeof(int) * 256);
+
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[3][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[3][i - 24];
+
+        for (int num = 0; num < 256; num++) {
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+            for (int k = 0; k < 8; k++)
+                x[k] = a[k] ^ AM[0][k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[3][k - 8] ^ AM[0][k - 8];
+
+            if (judgeR(x))
+                count[num]++;
+        }
+    }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[4][7 - j] = 1;
+                else
+                    AM[4][7 - j] = 0;
+        }
+ /*   for (int i = 0; i <256; i++)
+        if (count[i] == 256)
+            printf("%d\n",i);
 */
 
 
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[0][k - 8];
-
-
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[1][i] = a[i];
-            for (int i = 0; i < 8; i++)
-                printf("%d ", a[i]);
-            printf("\n");
-
-
-            //break;
-        }
-    }
-//--------------------------------------------------------------------------------计算AM[2] (a2, a1^a2, a1, a1)
-
-    printf("<%d>----------------------\n", 2);
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[1][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[1][i - 24];
-
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[1][k - 8];
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[2][i] = a[i];
-            for (int i = 0; i < 8; i++)
-                printf("%d ", a[i]);
-            printf("\n");
-            //break;
-        }
-    }
-//-----------------------------------------------------------------------------计算AM[3] (a3, a2^a3, a2, a2)
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[2][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[2][i - 24];
-
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[2][k - 8];
-
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[3][i] = a[i];
-            break;
-        }
-    }
-//---------------------------------------------------------------------------计算AM[4] (a0^a4, a0^a3^a4, a3, a3)
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[3][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[3][i - 24];
-
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k] ^ AM[0][k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[3][k - 8] ^ AM[0][k - 8];
-
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[4][i] = a[i];
-            break;
-        }
-    }
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[4][i]);
 
 
 //-------------------------------------------------------------------------计算AM[5] (a0^a5, a0^a4^a5, a4, a4)
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[4][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[4][i - 24];
+    // 先假定 AM[4] 0001 0000
+//    for (int i = 0; i < 8; i++)
+//        AM[4][i] = 0;
+//    AM[4][4] = 1;
 
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k] ^ AM[0][k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[4][k - 8] ^ AM[0][k - 8];
+    memset(count, 0, sizeof(int) * 256);
 
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[5][i] = a[i];
-            break;
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[4][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[4][i - 24];
+
+        for (int num = 0; num < 256; num++) {
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+            for (int k = 0; k < 8; k++)
+                x[k] = a[k] ^ AM[0][k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[4][k - 8] ^ AM[0][k - 8];
+
+            if (judgeR(x))
+                count[num]++;
         }
     }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[5][7 - j] = 1;
+                else
+                    AM[5][7 - j] = 0;
+        }
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[5][i]);
+
 //----------------------------------------------------------------------计算AM[6] (a6, a5^a6, a5, a5)
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[5][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[5][i - 24];
+   // 先假定 AM[5] 0001 0000
+//    for (int i = 0; i < 8; i++)
+//        AM[5][i] = 0;
+//    AM[5][5] = 1;
 
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[5][k - 8];
+    memset(count, 0, sizeof(int) * 256);
 
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[5][i] = a[i];
-            break;
+    for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+        create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+        for (int i = 0; i < 256; i++)
+            AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+        calc_DD();
+
+        for (int i = 16; i <= 23; i++)
+            x[i] = AM[5][i - 16];
+        for (int i = 24; i <= 31; i++)
+            x[i] = AM[5][i - 24];
+
+        for (int num = 0; num < 256; num++) {
+            for (int k = 0; k < 8; k++) {
+                if (num & (1 << k))
+                    a[7 - k] = 1;
+                else
+                    a[7 - k] = 0;
+            }
+            for (int k = 0; k < 8; k++)
+                x[k] = a[k];
+            for (int k = 8; k <= 15; k++)
+                x[k] = a[k - 8] ^ AM[5][k - 8];
+
+            if (judgeR(x))
+                count[num]++;
         }
     }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[6][7 - j] = 1;
+                else
+                    AM[6][7 - j] = 0;
+        }
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[6][i]);
+
 //--------------------------------------------------------------------计算AM[7] (a0^a7, a0^a6^a7, a6, a6)
-    for (int i = 16; i <= 23; i++)
-        x[i] = AM[6][i - 16];
-    for (int i = 24; i <= 31; i++)
-        x[i] = AM[6][i - 24];
+     // 先假定 AM[5] 0001 0000
+//   for (int i = 0; i < 8; i++)
+//       AM[6][i] = 0;
+//   AM[6][6] = 1;
 
-    for (int num = 0; num < 256; num++) {
-        for (int k = 0; k < 8; k++) {
-            if (num & (1 << k))
-                a[7 - k] = 1;
-            else
-                a[7 - k] = 0;
-        }
-        for (int k = 0; k < 8; k++)
-            x[k] = a[k] ^ AM[0][k];
-        for (int k = 8; k <= 15; k++)
-            x[k] = a[k - 8] ^ AM[6][k - 8] ^ AM[0][k - 8];
+   memset(count, 0, sizeof(int) * 256);
 
-        if (judgeR(x)) {
-            for (int i = 0; i < 8; i++)
-                AM[5][i] = a[i];
-            break;
+   for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
+       create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+       for (int i = 0; i < 256; i++)
+           AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
+       calc_DD();
+
+       for (int i = 16; i <= 23; i++)
+           x[i] = AM[6][i - 16];
+       for (int i = 24; i <= 31; i++)
+           x[i] = AM[6][i - 24];
+
+       for (int num = 0; num < 256; num++) {
+           for (int k = 0; k < 8; k++) {
+               if (num & (1 << k))
+                   a[7 - k] = 1;
+               else
+                   a[7 - k] = 0;
+           }
+           for (int k = 0; k < 8; k++)
+               x[k] = a[k] ^ AM[0][k];
+           for (int k = 8; k <= 15; k++)
+               x[k] = a[k - 8] ^ AM[6][k - 8] ^ AM[0][k - 8];
+
+           if (judgeR(x))
+               count[num]++;
+       }
+   }
+    for (int i = 0; i < 256; i++)
+        if (count[i] == 256) {
+            for (int j = 0; j < 8; j++)
+                if (i & (1 << j))
+                    AM[7][7 - j] = 1;
+                else
+                    AM[7][7 - j] = 0;
         }
-    }
+//    for (int i = 0; i < 8; i++)
+//        printf("%d ",AM[7][i]);
 
 }
 //======================================================================================================================
 static void read_M32() {
-    FILE *in;
-    in = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/M32.txt", "r");
-    for (int i = 0; i < 32; i++)
-        for (int j = 0; j < 32; j++)
-            fscanf(in, "%d", & M[i][j]);
-    fclose(in);
+   FILE *in;
+   in = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/M32.txt", "r");
+   for (int i = 0; i < 32; i++)
+       for (int j = 0; j < 32; j++)
+           fscanf(in, "%d", & M[i][j]);
+   fclose(in);
 }
 
 
 
 
 static void calc_M32() {
-    int M[4][4] = {{2, 3, 1, 1,},
-                   {1, 2, 3, 1},
-                   {1, 1, 2, 3},
-                   {3, 1, 1, 2}};
+   int M[4][4] = {{2, 3, 1, 1,},
+                  {1, 2, 3, 1},
+                  {1, 1, 2, 3},
+                  {3, 1, 1, 2}};
 
-    int a[3][64];
-    memset(a, 0, sizeof(int) * 192);
-    for (int i = 0; i < 8; i++) {
-        a[0][i * 9] = 1;
-        a[2][i * 9] = 1;
-    }
-    int x = 1;
-    for (int i = 0; i < 7; i++) {
-        a[1][i * 9 + x] = 1;
-        a[2][i * 9 + x] = 1;
-    }
-    a[1][56] = 1;
-    a[2][56] = 1;
-
-    int count = 0;
-   for (int i = 0; i < 4; i++) {
-       for (int j = 0; j < 4; j++) {
-
-       }
-
+   int a[3][64];
+   memset(a, 0, sizeof(int) * 192);
+   for (int i = 0; i < 8; i++) {
+       a[0][i * 9] = 1;
+       a[2][i * 9] = 1;
    }
+   int x = 1;
+   for (int i = 0; i < 7; i++) {
+       a[1][i * 9 + x] = 1;
+       a[2][i * 9 + x] = 1;
+   }
+   a[1][56] = 1;
+   a[2][56] = 1;
+
+   int count = 0;
+  for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+
+      }
+
+  }
 
 
 }
 
 static void calc_DD() {
-   // printf("\n");
-   // printf("%d %d %d %d", plain_text[0][0], kk[0], plain_text[0][0] ^ kk[0]  , SS[249]);
-    for (int i = 0; i < 256; i++) {
-        DD[i][0] = SS[(int)plain_text[i][0] ^ kk[0]];
-        DD[i][1] = SS[(int)plain_text[i][5] ^ kk[5]];
-        DD[i][2] = SS[(int)plain_text[i][10]^ kk[10]];
-        DD[i][3] = SS[(int)plain_text[i][15] ^ kk[15]];
-    }
+  // printf("\n");
+  // printf("%d %d %d %d", plain_text[0][0], kk[0], plain_text[0][0] ^ kk[0]  , SS[249]);
+   for (int i = 0; i < 256; i++) {
+       DD[i][0] = SS[(int)plain_text[i][0] ^ kk[0]];
+       DD[i][1] = SS[(int)plain_text[i][5] ^ kk[5]];
+       DD[i][2] = SS[(int)plain_text[i][10]^ kk[10]];
+       DD[i][3] = SS[(int)plain_text[i][15] ^ kk[15]];
+   }
 }
 
 static int affine(int num) {
-    bool x[8];
-    bool y[8];
-    int ans = 0;
+   bool x[8];
+   bool y[8];
+   int ans = 0;
 
-    for (int i = 0; i < 8; i++)
-        if (num & (1 << i))
-            x[i] = 1;
-        else
-            x[i] = 0;
-
-
-    for (int i = 0; i < 8; i++) {
-        y[i] = 0;
-        for (int j = 0; j < 8; j++)
-            if (A[i][j])
-                y[i] ^= x[j];
-        //y[i] ^= v[i];
-    }
+   for (int i = 0; i < 8; i++)
+       if (num & (1 << i))
+           x[7 - i] = 1;
+       else
+           x[7 - i] = 0;
 
 
-    for (int i = 0; i < 8; i++)
-        if (y[i])
-            ans += pow(2, 7 - i);
+   for (int i = 0; i < 8; i++) {
+       y[i] = 0;
+       for (int j = 0; j < 8; j++)
+           if (A[i][j])
+               y[i] ^= x[j];
+       //y[i] ^= v[i];
+   }
 
-    return ans;
+
+   for (int i = 0; i < 8; i++)
+       if (y[i])
+           ans += pow(2, 7 - i);
+
+   return ans;
 
 }
 
-static void calc_kk() {
-    for (int i = 1; i < 16; i++) {
-        for (int a = 0; a <= 255; a++) {
-            int sum = 0;
-            for (int j = 0; j <= 255; j++) {
-                sum ^= SS[a ^ plain_text[j][i]];
-                //printf("%d\n", SS[a ^ Aset[j][i]]);
-            }
-            if (sum == 0) {
-                kk[i] = a;
-                printf("%d : %d\n", i, a);
-                //break;
-            }
+static void calc_kk() {   // 计算 k'
+   int count[16][256];
+   memset(count, 0, sizeof(int) * 16 * 256);
 
-        }
-        printf("------------------------\n");
+   for (int num_Aset = 0; num_Aset < 256; num_Aset++) {
 
+       create_Aset(num_Aset);    //  // 使用第二个位置是 num_Aset 的这个 Aset
+       for (int i = 0; i < 256; i++)
+           AES128_ECB_decrypt(Aset[i], key, plain_text[i]);
 
-    }
-
-
-
-
-
+       for (int i = 1; i < 16; i++) {
+           for (int a = 0; a <= 255; a++) {
+               int sum = 0;
+               for (int j = 0; j <= 255; j++) {
+                   sum ^= SS[a ^ plain_text[j][i]];
+                   //printf("%d\n", SS[a ^ Aset[j][i]]);
+               }
+               if (sum == 0)
+                   count[i][a]++;
+           }
+       }
+   }
+   kk[0] = 0;
+   for (int i = 1; i < 16; i++) {
+       for (int j = 0; j < 256; j++)
+           if (count[i][j] == 256) {  // 在 256 个A-set中  都符合条件的才是我们所要的k'
+               kk[i] = j;
+               break;
+           }
+   }
 
 }
 
 static void calc_SS() {
-    FILE *fin;
-    int num;
-    fin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "r");
-    for (int i = 0; i < 256; i++)
-        for (int j = 0; j < 256; j++) {
-            fscanf(fin, "%d", &num);
-            for (int k = 0; k < 8; k++) {
-                if (num & (1 << k))
-                    Eq[i * 8 + k][num * 8 + k] = 1;
-                else
-                    Eq[i * 8 + k][num * 8 + k] = 0;
-            }
-        }
-    for (int i = 0; i < 2048; i++)
-        Eq[i][2049] = 0;
-    fclose(fin);
+   FILE *fin;
+   int num;
+   fin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "r");
+   for (int i = 0; i < 256; i++)
+       for (int j = 0; j < 256; j++) {
+           fscanf(fin, "%d", &num);
+           for (int k = 0; k < 8; k++) {
+               if (num & (1 << k))
+                   Eq[i * 8 + k][num * 8 + k] = 1;
+               else
+                   Eq[i * 8 + k][num * 8 + k] = 0;
+           }
+       }
+   for (int i = 0; i < 2048; i++)
+       Eq[i][2049] = 0;
+   fclose(fin);
 
-    int n = 2048, q0 = 0, q1 = 0, p = 0, x, temp;
-    bool res[2048];
+   int n = 2048, q0 = 0, q1 = 0, p = 0, x, temp;
+   bool res[2048];
 
-    memset(res, 0, sizeof(bool) * 2048);
+   memset(res, 0, sizeof(bool) * 2048);
 
-    for (int i = 0; i < n; i++) {   // i枚举n个未知数
-        x = -1;
-        for (int j = p; j < n; j++)
-            if (Eq[j][i]) {
-                x = j;
-                break;
-            }
-        if (x >= 0) {
-            if (x != p) {
-                for (int k = i; k <= n; k++) {   //两行交换
-                    temp = Eq[x][k];
-                    Eq[x][k] = Eq[p][k];
-                    Eq[p][k] = temp;
-                }
-            }
-            for (int j = p + 1; j < n; j++)
-                if (Eq[j][i])
-                    for (int k = i; k <= n; k++)
-                        Eq[j][k] ^= Eq[p][k];
-            p++;
-        } else {                    //遇到自由元
-            res[i] = 1;             //定为1
-            for (int j = 0; j < p; j++)   //找到前面xi系数为1的方程 全部带入xi值XOR掉
-                if (Eq[j][i]) {
-                    Eq[j][i] = 0;
-                    Eq[j][n] ^= 1;
-                }
-        }
-    }
-    p--;
-    for (int i = n - 1; i >= 0; i--) {
-        if (!res[i]) {
-            res[i] = Eq[p][n];
-            for (int j = 0; j < p; j++)
-                if (Eq[j][i]) {
-                    Eq[j][i] ^= Eq[p][i];
-                    Eq[j][n] ^= Eq[p][n];
-                }
-            p--;
-        }
-    }
+   for (int i = 0; i < n; i++) {   // i枚举n个未知数
+       x = -1;
+       for (int j = p; j < n; j++)
+           if (Eq[j][i]) {
+               x = j;
+               break;
+           }
+       if (x >= 0) {
+           if (x != p) {
+               for (int k = i; k <= n; k++) {   //两行交换
+                   temp = Eq[x][k];
+                   Eq[x][k] = Eq[p][k];
+                   Eq[p][k] = temp;
+               }
+           }
+           for (int j = p + 1; j < n; j++)
+               if (Eq[j][i])
+                   for (int k = i; k <= n; k++)
+                       Eq[j][k] ^= Eq[p][k];
+           p++;
+       } else {                    //遇到自由元
+           res[i] = 1;             //定为1
+           for (int j = 0; j < p; j++)   //找到前面xi系数为1的方程 全部带入xi值XOR掉
+               if (Eq[j][i]) {
+                   Eq[j][i] = 0;
+                   Eq[j][n] ^= 1;
+               }
+       }
+   }
+   p--;
+   for (int i = n - 1; i >= 0; i--) {
+       if (!res[i]) {
+           res[i] = Eq[p][n];
+           for (int j = 0; j < p; j++)
+               if (Eq[j][i]) {
+                   Eq[j][i] ^= Eq[p][i];
+                   Eq[j][n] ^= Eq[p][n];
+               }
+           p--;
+       }
+   }
 
-    /*
-    FILE *fout;
-    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/res.txt", "w");
-    for (int i = 0; i <2048; i++)
-        fprintf(fout, "x%d = %d\n", i, res[i]);
-    fclose(fout);
-    */
+   /*
+   FILE *fout;
+   fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/res.txt", "w");
+   for (int i = 0; i <2048; i++)
+       fprintf(fout, "x%d = %d\n", i, res[i]);
+   fclose(fout);
+   */
 
     int point = 0;
     for (int i = 0; i < 256; i++) {

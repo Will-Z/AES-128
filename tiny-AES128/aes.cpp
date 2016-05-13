@@ -516,11 +516,8 @@ static void InvCipher(void)
     InvSubBytes();
     AddRoundKey(0);
     FILE *fout;
-    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/one_plain.txt", "w");
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            fprintf(fout, "0x%.2x, ",(*state)[i][j]);
-    //fprintf(fout, "%d ", (*state)[0][0]);
+    fout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/pi.txt", "a");
+    fprintf(fout, "%d ", (*state)[0][0]);
     fclose(fout);
 
 
@@ -543,7 +540,34 @@ static void BlockCopy(uint8_t* output, uint8_t* input)
 /* Public functions:                                                         */
 /*****************************************************************************/
 #if defined(ECB) && ECB
+//--------------------------------------------------------------------------------------------
+void test_DD(uint8_t* intput, const uint8_t* key, uint8_t* output) {
+    BlockCopy(output, intput);
+    state = (state_t*) output;
 
+
+    MixColumns();
+
+    FILE *ffout;
+    ffout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/MC_DD.txt", "a");
+    int a[8];
+    for (int j = 0; j < 4; j++) {
+       // fprintf(ffout, "%d ",(*state)[0][j]);
+        for (int k = 0; k < 8; k++)
+            if ((*state)[0][j] & (1 << k))
+                a[7 - k] = 1;
+            else
+                a[7 - k] = 0;
+        for (int k = 0; k < 8; k++)
+            fprintf(ffout, "%d ", a[k]);
+    }
+    fprintf(ffout, "\n");
+    fclose(ffout);
+
+
+
+}
+//---------------------------------------------------------------------------------------------
 
 void AES128_ECB_encrypt(uint8_t* input, const uint8_t* key, uint8_t* output)
 {
