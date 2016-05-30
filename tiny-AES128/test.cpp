@@ -94,13 +94,15 @@ int main(void)
         SS[i] = affine(sbox[i ^ key[0]]);
         //SS[i] = sbox[i];  //  先假设  S' 等于 S盒
 
-    //  输出S'  SS[]
+
+
+
+ /*   //  输出S'  SS[]
     FILE *SSout;
     SSout = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/SS_table.txt", "w");
     for (int i = 0; i < 256; i++)
         fprintf(SSout, "%d:  %d\n", i, SS[i]);
     fclose(SSout);
-
 
     FILE *AMin;
     AMin = fopen("/Users/Will/Programming/Clion/tiny-AES128/Debug/AM.txt", "r");
@@ -109,7 +111,6 @@ int main(void)
             fscanf(AMin, "%d", &A[i][j]);
 
     fclose(AMin);
-
 
 
 
@@ -124,7 +125,7 @@ int main(void)
     fclose(SSSout);
 
 
-
+*/
 
 /*  //将 0-255 对应的affine 打印到 affine.txt
     FILE *Aout;
@@ -177,12 +178,12 @@ int main(void)
         //kk[i] = -1;
         kk[i] = key[i];    //先假设  k'等于key
 */
-    //calc_kk();
+    calc_kk();
 /*   // 打印kk[]
     for (int i = 0; i < 16; i++)
         printf("%d:  %d   %d\n",i, key[i],  kk[i]);
     printf("\n");
-*/
+/*
 
 /*
     FILE *AMin;
@@ -224,10 +225,10 @@ int main(void)
             matrix[j] =(uint8_t) DD[i][j];
         test_DD(matrix, key, output);
     }
-//---------------------------------------------------------------
-*/
+*///---------------------------------------------------------------
 
-/*
+
+
     calc_AM();
     // 打印AM[]
     for (int i = 0; i < 8; i++) {
@@ -236,8 +237,35 @@ int main(void)
         printf("\n");
     }
 
-*/
 
+    //------------------------------------------
+    /*
+    int ans_key[16];
+    int ans_sbox[256];
+
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++)
+            A[i][j] = AM[i][j];
+
+    for (int k = 0; k < 256; k++) {
+        int count = 0;
+        for (int i = 0; i < 256; i++)
+            if (affine(SS[i]) == sbox[i ^ k])
+                count++;
+        if (count == 256)
+            ans_key[0] = k;
+    }
+    for (int i = 1; i < 16; i++)
+        ans_key[i] = kk[i] ^ ans_key[0];
+
+
+    for (int i = 0; i < 256; i++)
+        ans_sbox[i ^ ans_key[0]] = affine(SS[i]);
+    for (int i = 0; i < 256; i++)
+        printf("%d:   %.2x\n", i, ans_sbox[i]);
+
+*/
+    //------------------------------------------
     return 0;
 }
 
@@ -296,8 +324,8 @@ static void calc_AM() {
 */
 
     for (int i = 0; i < 8; i++)    //将 AM[0] 固定为  1000 0000
-        AM[0][i] = 1;
-//    AM[0][0] = 1;
+        AM[0][i] = 0;
+    AM[0][7] = 1;
 
 
 
@@ -439,6 +467,7 @@ static void calc_AM() {
     }
     for (int i = 0; i < 256; i++)
         if (count[i] == 256) {
+
             for (int j = 0; j < 8; j++)
                 if (i & (1 << j))
                     AM[3][7 - j] = 1;
@@ -451,7 +480,7 @@ static void calc_AM() {
 //        printf("%d ",AM[3][i]);
 
 //---------------------------------------------------------------------------计算AM[4] (a0^a4, a0^a3^a4, a3, a3)
-    // 先假定 AM[3] 0001 0000
+   // 先假定 AM[3] 0001 0000
 //    for (int i = 0; i < 8; i++)
 //        AM[3][i] = 0;
 //    AM[3][3] = 1;
@@ -493,6 +522,7 @@ static void calc_AM() {
                 else
                     AM[4][7 - j] = 0;
         }
+
  /*   for (int i = 0; i <256; i++)
         if (count[i] == 256)
             printf("%d\n",i);
@@ -540,6 +570,7 @@ static void calc_AM() {
     }
     for (int i = 0; i < 256; i++)
         if (count[i] == 256) {
+
             for (int j = 0; j < 8; j++)
                 if (i & (1 << j))
                     AM[5][7 - j] = 1;
@@ -586,6 +617,7 @@ static void calc_AM() {
     }
     for (int i = 0; i < 256; i++)
         if (count[i] == 256) {
+
             for (int j = 0; j < 8; j++)
                 if (i & (1 << j))
                     AM[6][7 - j] = 1;
@@ -596,7 +628,7 @@ static void calc_AM() {
 //        printf("%d ",AM[6][i]);
 
 //--------------------------------------------------------------------计算AM[7] (a0^a7, a0^a6^a7, a6, a6)
-     // 先假定 AM[5] 0001 0000
+     // 先假定 AM[6] 0001 0000
 //   for (int i = 0; i < 8; i++)
 //       AM[6][i] = 0;
 //   AM[6][6] = 1;
@@ -632,6 +664,7 @@ static void calc_AM() {
    }
     for (int i = 0; i < 256; i++)
         if (count[i] == 256) {
+            //printf("!!!!    %d\n", i);
             for (int j = 0; j < 8; j++)
                 if (i & (1 << j))
                     AM[7][7 - j] = 1;
@@ -695,6 +728,7 @@ static void calc_DD() {
        DD[i][2] = SS[(int)plain_text[i][10]^ kk[10]];
        DD[i][3] = SS[(int)plain_text[i][15] ^ kk[15]];
    }
+
 }
 
 static int affine(int num) {
